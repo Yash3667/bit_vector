@@ -86,11 +86,11 @@ int bit_vector_clear(bit_vector_t *vector, uint64_t index);
 int bit_vector_get(bit_vector_t *vector, uint64_t index);
 
 /**
- * Get the size of the bit vector. This function is mostly useless
+ * Get the index of the bit vector. This function is mostly useless
  * for type of BIT_VECTOR_TYPE_ARRAY but is useful for when using
  * as a stream.
  */
-int bit_vector_size(bit_vector_t *vector, uint64_t *size);
+int bit_vector_index(bit_vector_t *vector, uint64_t *size);
 
 /**
  * Resize a vector so it may hold more or fewer bits.
@@ -118,10 +118,14 @@ bit_vector_t* bit_vector_append_string(bit_vector_t *vector, char *bit_string);
 bit_vector_t* bit_vector_append_vector(bit_vector_t *source, bit_vector_t *dest);
 
 /**
- * This function is used to convert a bit string which is
- * represented as a C-style string into a bit vector string.
+ * Convert a C-style bit string into a bit vector.
  */
-bit_vector_t* bit_vector_convert(char*);
+bit_vector_t* bit_vector_to_string(char *bit_string);
+
+/**
+ * Convert a bit vector into a C-style string.
+ */
+char* bit_vector_to_vector(bit_vector_t *vector);
 
 /**
  * This function is used to print the bit vector depending

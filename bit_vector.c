@@ -157,25 +157,64 @@ bit_vector_get(bit_vector_t *vector, uint64_t index);
     return !!return_bits;
 }
 
+
 /**
- * This function is used to provide the size of a bit
- * vector depending on the flag which has been passed.
- *
- * @param vector The vector whose size we want
- * @param flag The type of size to return.
- * @return Vector size or 0
+ * Resize a vector so it may hold more or fewer bits.
  */
-uint64_t
-bit_vector_get_size(bit_vector_t *vector, uint8_t flag)
+bit_vector_t* bit_vector_resize(bit_vector_t *vector, uint64_t length);
+
+/**
+ * Append a single bit to a bit vector. Used when working with a
+ * vector of type BIT_VECTOR_TYPE_STREAM.
+ */
+bit_vector_t* bit_vector_append_bit(bit_vector_t *vector, uint8_t bit);
+
+/**
+ * Append a bit string to a bit vector. Used when working with a
+ * vector of type BIT_VECTOR_TYPE_STREAM.
+ */
+bit_vector_t* bit_vector_append_string(bit_vector_t *vector, char *bit_string);
+
+/**
+ * Append a bit vector to a bit vector. Used when working with a
+ * vector of type BIT_VECTOR_TYPE_STREAM. If the source vector 
+ * is of type BIT_VECTOR_TYPE_STREAM. then only the length of the
+ * stream is copied.
+ */
+bit_vector_t* bit_vector_append_vector(bit_vector_t *source, bit_vector_t *dest);
+
+/**
+ * Convert a C-style bit string into a bit vector.
+ */
+bit_vector_t* bit_vector_to_string(char *bit_string);
+
+/**
+ * Convert a bit vector into a C-style string.
+ */
+char* bit_vector_to_vector(bit_vector_t *vector);
+
+/**
+ * Get the index of the bit vector. This function is mostly useless
+ * for type of BIT_VECTOR_TYPE_ARRAY but is useful for when using
+ * as a stream.
+ *
+ * @param   vector      The vector whose size we want.
+ * @param   index       Pointer to index variable.
+ * @return  0           Size succesfully returned.
+ * @return  -1          Error with errno set.
+ *  EINVAL: vector is NULL.
+ *  EINVAL: vector is of type BIT_VECTOR_TYPE_ARRAY.
+ *  EINVAL: index is NULL
+ */
+int 
+bit_vector_index(bit_vector_t *vector, uint64_t *index);
 {
-    if (!vector) {
-        return 0;
-    } else if (flag == VECTOR_FLAG_FULL) {
-        return vector->vector_length;
-    } else if (flag == VECTOR_FLAG_STREAM) {
-        return vector->working_index;
+    if (!vector || !index || vector->type == BIT_VECTOR_TYPE_ARRAY) {
+        errno = -EINVAL;
+        return -1;
     }
 
+    *index = vector->index;
     return 0;
 }
 
