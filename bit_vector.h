@@ -21,10 +21,6 @@
 #define BIT_VECTOR_GET_BYTE_INDEX(i)        (i / BIT_VECTOR_BITS_IN_BYTE)
 #define BIT_VECTOR_GET_BIT_INDEX(i)         (i & 0x7)
 
-#define VECTOR_SET_STRING(index)          (0x1 << VECTOR_BIT_INDEX(index))
-#define VECTOR_CLEAR_STRING(index)        (~VECTOR_SET_STRING(index))
-#define VECTOR_CHECK_STRING(index)        (VECTOR_SET_STRING(index))
-
 /* Enumerations */
 // Bit vector type.
 typedef enum _bit_vector_type {
@@ -86,13 +82,6 @@ int bit_vector_clear(bit_vector_t *vector, uint64_t index);
 int bit_vector_get(bit_vector_t *vector, uint64_t index);
 
 /**
- * Get the index of the bit vector. This function is mostly useless
- * for type of BIT_VECTOR_TYPE_ARRAY but is useful for when using
- * as a stream.
- */
-int bit_vector_index(bit_vector_t *vector, uint64_t *size);
-
-/**
  * Resize a vector so it may hold more or fewer bits.
  */
 bit_vector_t* bit_vector_resize(bit_vector_t *vector, uint64_t length);
@@ -115,37 +104,35 @@ bit_vector_t* bit_vector_append_string(bit_vector_t *vector, char *bit_string);
  * is of type BIT_VECTOR_TYPE_STREAM. then only the length of the
  * stream is copied.
  */
-bit_vector_t* bit_vector_append_vector(bit_vector_t *source, bit_vector_t *dest);
+bit_vector_t* bit_vector_append_vector(bit_vector_t *dest, bit_vector_t *src, uint64_t size);
 
 /**
- * Convert a C-style bit string into a bit vector.
+ * Convert a C-style bit string into a bit vector. The
+ * resulting vector is of type BIT_VECTOR_TYPE_STREAM.
  */
-bit_vector_t* bit_vector_to_string(char *bit_string);
+bit_vector_t* bit_vector_string_to_vector(char *bit_string);
 
 /**
- * Convert a bit vector into a C-style string.
+ * Convert a bit vector into a C-style string. It is the users
+ * responsibility to free this string.
  */
-char* bit_vector_to_vector(bit_vector_t *vector);
+char* bit_vector_vector_to_string(bit_vector_t *vector);
 
 /**
- * This function is used to print the bit vector depending
- * on the flag which is passed.
+ * Print a vector to stdout.
  */
-void bit_vector_print(bit_vector_t*, uint8_t);
+void bit_vector_print(bit_vector_t *vector);
 
 /**
- * This function is used to output a bit vector onto a file
- * after a specified offset. This is helpful when you want to
- * save a bit vector in a binary format.
+ * Output a bit vector onto a file descriptor. The semantics
+ * are acquired from the type of the vector.
  */
-ssize_t bit_vector_output(bit_vector_t*, int, uint64_t, uint8_t);
+ssize_t bit_vector_file_output(bit_vector_t *vector, int fd, uint64_t offset);
 
 /**
- * This function is used to input a bit vector from a file.
- * This function expects the file to be formatted the way
- * bit_vector_output emits. This is helpful for saving and restoring
- * state of the bit vector.
+ * Input a bit vector from a file descriptor. The semantics
+ * are acquired from the type of the vector.
  */
-bit_vector_t* bit_vector_input(int, uint64_t);
+bit_vector_t* bit_vector_file_input(int fd, uint64_t *offset, bit_vector_type);
 
 #endif
