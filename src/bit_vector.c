@@ -40,9 +40,6 @@ bit_vector_create(bit_vector_type type, uint64_t length)
         temp_length = stream_vector_size;
     } else {
         temp_length = length;
-        if (temp_length == 0) {
-            return NULL;
-        }
     }
 
     vector = malloc(sizeof *vector);
