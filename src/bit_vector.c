@@ -437,8 +437,8 @@ bit_vector_file_output(bit_vector_t *vector, int fd, uint64_t offset)
 
     // Micro optimization to save number of writes.
     type = metadata;
-    length = (uint64_t*)metadata + type_size;
-    index = (uint64_t*)metadata + type_size + length_size;
+    length = (uint64_t*)(metadata + type_size);
+    index = (uint64_t*)(metadata + type_size + length_size);
 
     *type = vector->vector_type;
     *length = vector->length;
@@ -471,8 +471,8 @@ bit_vector_file_output(bit_vector_t *vector, int fd, uint64_t offset)
  * -> 8 bytes for the index.
  * -> Length/Index bytes for the array.
  *
- * @param   fd      The file you want to output to.
- * @param   offset  The offset in file to output to. The
+ * @param   fd      The file you want to input from.
+ * @param   offset  The offset in file to input from. The
  *                  next offset to read from is returned
  *                  in this.
  *
@@ -500,8 +500,8 @@ bit_vector_file_input(int fd, uint64_t *offset)
         *offset += metadata_size;
     }
     type = metadata;
-    length = (uint64_t*)metadata + type_size;
-    index = (uint64_t*)metadata + type_size + length_size;
+    length = (uint64_t*)(metadata + type_size);
+    index = (uint64_t*)(metadata + type_size + length_size);
 
     vector = bit_vector_create(*type, *length);
     if (!vector) {

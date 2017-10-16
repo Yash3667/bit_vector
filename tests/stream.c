@@ -1,17 +1,15 @@
-/* @file Bit vector test
+/* @file Bit vector test stream
  * Units tests for bit_vector data structure.
  *
  * Author: Yash Gupta <yash_gupta12@live.com>
  * Copyright: Yash Gupta
  * License: MIT Public License
  */
-#include "bit_vector.h"
+#include "../src/bit_vector.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-
-#define VEC_SIZE    64
 
 #define err_print(format, ...)  \
     fprintf(stderr, "[%d:%s:%d]" format, errno, strerror(errno), __LINE__, ##__VA_ARGS__)
