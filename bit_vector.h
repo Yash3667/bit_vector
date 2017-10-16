@@ -2,18 +2,18 @@
  * This is the public header for the bit vector data structure
  * and presents the data structure interface.
  *
- * Author: Yash Gupta <ygupta@ucsc.edu>
+ * Author: Yash Gupta <yash_gupta12@live.com>
  * Copyright: Yash Gupta
+ * License: MIT Public License
  */
 #include <stdint.h>
 
 #ifndef _BIT_VECTOR_H_
 #define _BIT_VECTOR_H_
 
-/* Macros */
 // Unit conversion.
 #define BIT_VECTOR_BITS_IN_BYTE             8
-#define BIT_VECTOR_BITS_TO_BYTES(b)         (b / BIT_VECTOR_BITS_IN_BYTE)
+#define BIT_VECTOR_BITS_TO_BYTES(b)         ((b / BIT_VECTOR_BITS_IN_BYTE) + 1)
 #define BIT_VECTOR_BYTES_TO_BITS(b)         (b * BIT_VECTOR_BITS_TO_BYTES)
 
 // Unit indexes for byte arrays.
@@ -21,7 +21,6 @@
 #define BIT_VECTOR_GET_BYTE_INDEX(i)        (i / BIT_VECTOR_BITS_IN_BYTE)
 #define BIT_VECTOR_GET_BIT_INDEX(i)         (i & 0x7)
 
-/* Enumerations */
 // Bit vector type.
 typedef enum _bit_vector_type {
     BIT_VECTOR_TYPE_STREAM = 0,
@@ -34,7 +33,6 @@ enum {
     BIT_VECTOR_STATE_SET
 };
 
-/* Structures */
 // Main structure for data structure.
 typedef struct _bit_vector_t {
     /* 
@@ -113,7 +111,7 @@ bit_vector_t* bit_vector_append_vector(bit_vector_t *dest, bit_vector_t *src, ui
 bit_vector_t* bit_vector_string_to_vector(char *bit_string);
 
 /**
- * Convert a bit vector into a C-style string. It is the users
+ * Convert a bit vector into a C-style string. It is the callers
  * responsibility to free this string.
  */
 char* bit_vector_vector_to_string(bit_vector_t *vector);
@@ -124,15 +122,13 @@ char* bit_vector_vector_to_string(bit_vector_t *vector);
 void bit_vector_print(bit_vector_t *vector);
 
 /**
- * Output a bit vector onto a file descriptor. The semantics
- * are acquired from the type of the vector.
+ * Output a bit vector onto a file descriptor from an offset.
  */
-ssize_t bit_vector_file_output(bit_vector_t *vector, int fd, uint64_t offset);
+int64_t bit_vector_file_output(bit_vector_t *vector, int fd, uint64_t offset);
 
 /**
- * Input a bit vector from a file descriptor. The semantics
- * are acquired from the type of the vector.
+ * Input a bit vector from a file descriptor and an offset.
  */
-bit_vector_t* bit_vector_file_input(int fd, uint64_t *offset, bit_vector_type);
+bit_vector_t* bit_vector_file_input(int fd, uint64_t *offset);
 
 #endif

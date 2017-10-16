@@ -2,8 +2,9 @@
  * This is implementation for the API presented in the
  * corresponding header. 
  *
- * Author: Yash Gupta <ygupta@ucsc.edu>
+ * Author: Yash Gupta <yash_gupta12@live.com>
  * Copyright: Yash Gupta
+ * License: MIT Public License
  */
 #include "bit_vector.h"
 #include <stdio.h>
@@ -24,14 +25,24 @@
  * @return  NULL        Not enough memory.
  */
 bit_vector_t* 
-bit_vector_create(bit_vector_type type, uint64_t length);
+bit_vector_create(bit_vector_type type, uint64_t length)
 {
     const uint64_t stream_vector_size = 4;
     bit_vector_t *vector;
     uint64_t temp_length;
 
-    if (length == 0) {
-        return NULL;
+    /*
+     * When working with a stream vector, we do not care about
+     * the length as we work with a four byte vector and increase
+     * the length as required.
+     */
+    if (type == BIT_VECTOR_TYPE_STREAM) {
+        temp_length = stream_vector_size;
+    } else {
+        temp_length = length;
+        if (temp_length == 0) {
+            return NULL;
+        }
     }
 
     vector = malloc(sizeof *vector);
@@ -39,19 +50,7 @@ bit_vector_create(bit_vector_type type, uint64_t length);
         return NULL;
     }
 
-    /*
-     * When working with a stream vector, we do not care about
-     * the length as we work with a four byte vector and increase
-     * the length as required.
-     */
-    
-    if (type == BIT_VECTOR_TYPE_STREAM) {
-        temp_length = stream_vector_size;
-    } else {
-        temp_length = length;
-    }
-
-    vector->array = calloc(BIT_VECTOR_BITS_TO_BYTES(temp_length) + 1, sizeof *(vector->array));
+    vector->array = calloc(BIT_VECTOR_BITS_TO_BYTES(temp_length), sizeof *(vector->array));
     if (!(vector->array)) {
         free(vector);
         return NULL;
@@ -100,7 +99,7 @@ bit_vector_set(bit_vector_t *vector, uint64_t index)
     uint8_t or_bits;
     
     if (!vector || index >= vector->length) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return -1;
     }
     
@@ -123,12 +122,12 @@ bit_vector_set(bit_vector_t *vector, uint64_t index)
  *  EINVAL: index is beyond vector length.
  */
 int 
-bit_vector_clear(bit_vector_t *vector, uint64_t index);
+bit_vector_clear(bit_vector_t *vector, uint64_t index)
 {
     uint8_t and_bits;
 
     if (!vector || index >= vector->length) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return -1;
     }
 
@@ -152,13 +151,13 @@ bit_vector_clear(bit_vector_t *vector, uint64_t index);
  *  EINVAL: index is beyond vector length.
  */
 int 
-bit_vector_get(bit_vector_t *vector, uint64_t index);
+bit_vector_get(bit_vector_t *vector, uint64_t index)
 {
     int8_t return_bits;
     int8_t and_bits;
     
     if (!vector || index >= vector->length) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return -1;
     }
 
@@ -180,18 +179,18 @@ bit_vector_get(bit_vector_t *vector, uint64_t index);
 bit_vector_t*
 bit_vector_resize(bit_vector_t *vector, uint64_t length)
 {
-    uint8_t *temp_vector;
+    uint8_t *temp_array;
 
     if (!vector) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     }
 
-    temp_vector = realloc(vector->array, (length / BIT_VECTOR_BITS_IN_BYTE) + 1);
-    if (!temp_vector) {
+    temp_array = realloc(vector->array, BIT_VECTOR_BITS_TO_BYTES(length));
+    if (!temp_array) {
         return NULL;
     } else {
-        vector->array = temp_vector;
+        vector->array = temp_array;
         vector->length = length;
     }
 
@@ -213,13 +212,13 @@ bit_vector_t*
 bit_vector_append_bit(bit_vector_t* vector, uint8_t bit)
 {
     if (!vector) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     } else if (bit > BIT_VECTOR_STATE_SET) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     } else if (vector->vector_type == BIT_VECTOR_TYPE_ARRAY) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     }
 
@@ -230,9 +229,9 @@ bit_vector_append_bit(bit_vector_t* vector, uint8_t bit)
     }
 
     if (bit == BIT_VECTOR_STATE_CLEAR) {
-        bit_vector_clear_bit(vector, vector->index);
+        bit_vector_clear(vector, vector->index);
     } else {
-        bit_vector_set_bit(vector, vector->index);
+        bit_vector_set(vector, vector->index);
     }
     vector->index += 1;
 
@@ -257,10 +256,10 @@ bit_vector_append_string(bit_vector_t *vector, char *bit_string)
     uint32_t i;
 
     if (!vector || !bit_string) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     } else if (vector->vector_type == BIT_VECTOR_TYPE_ARRAY) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     }
 
@@ -290,21 +289,22 @@ bit_vector_append_string(bit_vector_t *vector, char *bit_string)
  * @return  NULL    Append failed.
  */
 bit_vector_t*
-bit_vector_append_vector(bit_vector_t *src, bit_vector_t *src, uint64_t size)
+bit_vector_append_vector(bit_vector_t *dest, bit_vector_t *src, uint64_t size)
 {
     uint64_t i, append_length;
     uint8_t bit;
 
     if (!dest || !src) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     } else if (dest->vector_type == BIT_VECTOR_TYPE_ARRAY) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     }
 
-    append_length = (src->vector_type == BIT_VECTOR_TYPE_ARRAY)? src->length: src->index;
-    if (size < append_length) {
+    if (size == 0) {    
+        append_length = (src->vector_type == BIT_VECTOR_TYPE_ARRAY)? src->length: src->index;
+    } else {
         append_length = size;
     }
 
@@ -342,7 +342,7 @@ bit_vector_string_to_vector(char *bit_string)
 }
 
 /**
- * Convert a bit vector into a C-style string. It is the users
+ * Convert a bit vector into a C-style string. It is the callers
  * responsibility to free this string.
  *
  * @param   vector      The vector to convert into a string.
@@ -359,7 +359,7 @@ bit_vector_vector_to_string(bit_vector_t *vector)
     uint64_t i, string_length;
 
     if (!vector) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
     }
 
@@ -385,7 +385,6 @@ bit_vector_vector_to_string(bit_vector_t *vector)
 void
 bit_vector_print(bit_vector_t *vector)
 {
-    const uint8_t ascii_zero_value = 0x30;
     uint64_t i, print_length;
 
     /*
@@ -396,14 +395,23 @@ bit_vector_print(bit_vector_t *vector)
     
     print_length = (vector->vector_type == BIT_VECTOR_TYPE_ARRAY)? vector->length: vector->index;
     for (i = 0; i < print_length; i++) {
-        printf("%u", bit_vector_get(vector, i) + ascii_zero_value);
+        printf("%u", bit_vector_get(vector, i));
     }
-    printf("\n");
+    
+    if (i > 0) {
+        printf("\n");
+    }
 }
 
 /**
- * Output a bit vector onto a file descriptor. The semantics
- * are acquired from the type of the vector.
+ * Output a bit vector onto a file descriptor from 
+ * an offset.
+ * 
+ * Format:
+ * -> 1 byte for the bit vector type.
+ * -> 8 bytes for the length.
+ * -> 8 bytes for the index.
+ * -> Length/Index bytes for the array.
  *
  * @param   vector  The bit vector you want to output.
  * @param   fd      The file you want to output to.
@@ -412,50 +420,59 @@ bit_vector_print(bit_vector_t *vector)
  * @return  The next writing offset
  * @return  -1      Error with errno set.
  */
-ssize_t
+int64_t
 bit_vector_file_output(bit_vector_t *vector, int fd, uint64_t offset)
 {
-    uint64_t length;
-    ssize_t size_to_write;
-    ssize_t bytes_written;
+    // TODO: Move to macros.
+    const int type_size = 1;
+    const int length_size = 8;
+    const int index_size = 8;
+    const int metadata_size = type_size + length_size + index_size;
+
+    uint64_t *length, *index, length_of_array;
+    uint8_t *type;
+    uint8_t metadata[metadata_size];
 
     if (!vector) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return -1;
     }
 
-    /**
-     * The format outputted to the file is simple. It is the
-     * length (in bits) followed by the vector. In case of a STREAM vector,
-     * the vector is outputted until the index.
-     */
-    length = (vector->vector_type == BIT_VECTOR_TYPE_ARRAY)? vector->length: vector->index;
+    // Micro optimization to save number of writes.
+    type = metadata;
+    length = (uint64_t*)metadata + type_size;
+    index = (uint64_t*)metadata + type_size + length_size;
 
-    size_to_write = sizeof length;
-    bytes_written = pwrite(fd, &length, size_to_write, offset);
-    if (bytes_written < size_to_write) {
+    *type = vector->vector_type;
+    *length = vector->length;
+    *index = vector->index;
+    
+    if (pwrite(fd, metadata, metadata_size, offset) < metadata_size) {
         return -1;
     } else {
-        offset += bytes_written;
+        offset += metadata_size;
     }
 
-    // TODO: Ouput vector type.
-
-    length = (length / BIT_VECTOR_BITS_IN_BYTE) + 1;
-    size_to_write = length;
-    bytes_written = pwrite(fd, vector->array, size_to_write, offset);
-    if (bytes_written < size_to_write) {
+    length_of_array = (vector->vector_type == BIT_VECTOR_TYPE_ARRAY)? vector->length: vector->index;
+    length_of_array = BIT_VECTOR_BITS_TO_BYTES(length_of_array);
+    if (pwrite(fd, vector->array, length_of_array, offset) < (int64_t)length_of_array) {
         return -1;
     } else {
-        offset += bytes_written;
+        offset += length_of_array;
     }
 
     return offset;
 }
 
 /**
- * Input a bit vector from a file descriptor. The semantics
- * are acquired from the type of the vector.
+ * Input a bit vector from a file descriptor and 
+ * an offset.
+ *  
+ * Format:
+ * -> 1 byte for the bit vector type.
+ * -> 8 bytes for the length.
+ * -> 8 bytes for the index.
+ * -> Length/Index bytes for the array.
  *
  * @param   fd      The file you want to output to.
  * @param   offset  The offset in file to output to. The
@@ -468,33 +485,41 @@ bit_vector_file_output(bit_vector_t *vector, int fd, uint64_t offset)
 bit_vector_t*
 bit_vector_file_input(int fd, uint64_t *offset)
 {
-    bit_vector_t *vector;
-    uint64_t length;
-    ssize_t size_to_read;
-    ssize_t bytes_read;
+    // TODO: Move to macros.
+    const int type_size = 1;
+    const int length_size = 8;
+    const int index_size = 8;
+    const int metadata_size = type_size + length_size + index_size;
 
-    /* The format is the length (in bits) followed by the vector */
-    size_to_read = sizeof length;
-    bytes_read = pread(fd, &length, size_to_read, offset);
-    if (bytes_read < size_to_read) {
+    bit_vector_t *vector;
+    uint64_t *length, *index, length_of_array;
+    uint8_t *type;
+    uint8_t metadata[metadata_size];
+
+    // Micro optimization to save number of reads.
+    if (pread(fd, metadata, metadata_size, *offset) < metadata_size) {
         return NULL;
     } else {
-        *offset += bytes_read;
+        *offset += metadata_size;
     }
+    type = metadata;
+    length = (uint64_t*)metadata + type_size;
+    index = (uint64_t*)metadata + type_size + length_size;
 
-    vector = bit_vector_create(length, BIT_);
+    vector = bit_vector_create(*type, *length);
     if (!vector) {
         return NULL;
     } else {
-        vector->working_index = length;
+        vector->index = *index;
     }
 
-    /* Read in the entire vector */
-    length = (length / VECTOR_BYTE_SIZE) + 1;
-    size_to_read = length;
-    bytes_read = pread(fd, vector->vector, size_to_read, offset);
-    if (bytes_read < size_to_read) {
+    length_of_array = (vector->vector_type == BIT_VECTOR_TYPE_ARRAY)? vector->length: vector->index;
+    length_of_array = BIT_VECTOR_BITS_TO_BYTES(length_of_array);
+    if (pread(fd, vector->array, length_of_array, *offset) < (int64_t)length_of_array) {
+        bit_vector_free(vector);
         return NULL;
+    } else {
+        *offset += length_of_array;
     }
 
     return vector;
