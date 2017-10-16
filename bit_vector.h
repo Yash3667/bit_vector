@@ -12,7 +12,7 @@
 #define _BIT_VECTOR_H_
 
 // Unit conversion.
-#define BIT_VECTOR_BITS_IN_BYTE             8
+#define BIT_VECTOR_BITS_IN_BYTE             (2 << 3)
 #define BIT_VECTOR_BITS_TO_BYTES(b)         ((b / BIT_VECTOR_BITS_IN_BYTE) + 1)
 #define BIT_VECTOR_BYTES_TO_BITS(b)         (b * BIT_VECTOR_BITS_TO_BYTES)
 
