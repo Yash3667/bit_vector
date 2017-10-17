@@ -77,6 +77,7 @@ main(void)
     printf("array_vec\n");
     bit_vector_print(array_vec);
 
+    bit_vector_free(read_vec);    
     bit_vector_free(array_vec);
     return 0;
 }

@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 /**
  * Create and initialize a bit vector with its default values
@@ -27,17 +28,15 @@
 bit_vector_t* 
 bit_vector_create(bit_vector_type type, uint64_t length)
 {
-    const uint64_t stream_vector_size = 4;
     bit_vector_t *vector;
     uint64_t temp_length;
 
     /*
-     * When working with a stream vector, we do not care about
-     * the length as we work with a four byte vector and increase
-     * the length as required.
+     * Rounding up to power of 2 for length as caller may be giving
+     * hint at required size for streams.
      */
     if (type == BIT_VECTOR_TYPE_STREAM) {
-        temp_length = stream_vector_size;
+        temp_length = 1 << ((int)log2(length) + 1);
     } else {
         temp_length = length;
     }
@@ -192,6 +191,38 @@ bit_vector_resize(bit_vector_t *vector, uint64_t length)
     }
 
     return vector;
+}
+
+/**
+ * Detach a bit from a bit vector. Used when working with a
+ * vector of type BIT_VECTOR_TYPE_STREAM.
+ * 
+ * @param   vector      The vector to detach bit from.
+ * 
+ * @return  0/1
+ * @return  -1          Invalid parameter.
+ * @return  -1          Nothing to detach (ENOSR).
+ */
+int8_t 
+bit_vector_detach(bit_vector_t *vector)
+{
+    uint8_t bit;
+
+    if (!vector) {
+        errno = EINVAL;
+        return -1;
+    } else if (vector->vector_type == BIT_VECTOR_TYPE_ARRAY) {
+        errno = EINVAL;
+        return -1;
+    } else if (vector->index == 0) {
+        errno = ENOSR;
+        return -1;
+    }
+
+    vector->index--;
+    bit = bit_vector_get(vector, vector->index);
+
+    return bit;
 }
 
 /**
