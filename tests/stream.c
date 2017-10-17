@@ -28,7 +28,10 @@ main(void)
     char *str_vec;
     stream_vec = read_vec = NULL;
 
-    stream_vec = bit_vector_create(BIT_VECTOR_TYPE_STREAM, VEC_SIZE);
+    // streaming vectors dont care about space. If passing in
+    // a value > 0, it is rounded up to the next highest power
+    // of two.
+    stream_vec = bit_vector_create(BIT_VECTOR_TYPE_STREAM, 0);
     if (!stream_vec) {
         err_print("create failed\n");
         return errno;

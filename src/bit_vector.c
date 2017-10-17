@@ -28,6 +28,7 @@
 bit_vector_t* 
 bit_vector_create(bit_vector_type type, uint64_t length)
 {
+    const int default_stream_size = 4;
     bit_vector_t *vector;
     uint64_t temp_length;
 
@@ -36,7 +37,11 @@ bit_vector_create(bit_vector_type type, uint64_t length)
      * hint at required size for streams.
      */
     if (type == BIT_VECTOR_TYPE_STREAM) {
-        temp_length = 1 << ((int)log2(length) + 1);
+        if (length > 0) {
+            temp_length = 1 << ((int)log2(length) + 1);
+        } else {
+            temp_length = default_stream_size;
+        }
     } else {
         temp_length = length;
     }
